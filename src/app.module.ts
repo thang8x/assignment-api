@@ -6,18 +6,18 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeOrmConfig } from './database/typeorm.config';
+import { ResidentModule } from './modules/resident.modules';
+import { AuthModule } from './modules/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigModule],
-      useFactory: (configService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') }, // Set token expiration time
-      })
+    ConfigModule.forRoot({
+      isGlobal: true, // Make the configuration globally available
+      envFilePath: join(__dirname, '..', '.env'), // Load environment variables from .env file
     }),
+    TypeOrmModule.forRoot(typeOrmConfig),
     MailerModule.forRoot(      
       {
         transport: {
@@ -40,8 +40,10 @@ import { JwtModule } from '@nestjs/jwt';
                       },
                   }
                 }
-        })
-  ],
+        }),
+      ResidentModule,
+      AuthModule      
+    ],
   controllers: [AppController],
   providers: [AppService],
 })
